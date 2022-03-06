@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta http-equiv="X-UA-Compatible" content="ie-edge"/>  
+        <title>Practice</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    </head>
+    <body>
+        <canvas id="chart" width="800"></canvas>
+        <script>
+
+            createChart();
+            async function createChart()
+            {
+                const data=await parseDataset();
+                const ctx = document.getElementById('chart').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.xs,
+                        datasets: [{
+                            label: 'Zonal annual means',
+                            data: data.ys,
+                            backgroundColor: 'pink',
+                            borderColor: 'pink',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'North Hemisphere',
+                            data: data.nhd,
+                            backgroundColor: 'royalblue',
+                            borderColor: 'royalblue',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'South Hemisphere',
+                            data: data.shd,
+                            backgroundColor: 'lime',
+                            borderColor: 'lime',
+                            borderWidth: 1
+                        },],
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                ticks: {
+                                    // Include a dollar sign in the ticks
+                                    callback: function(value, index, ticks) {
+                                        return value+'°';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            async function parseDataset()
+            {
+                const xs=[];const ys=[];
+                const nhl=[];const nhd=[];
+                const shl=[];const shd=[];
+                const zone_fetch=await fetch('datasets/ZonAnn.Ts+dSST.csv');
+                const zone_data=await zone_fetch.text();
+                const zone_table=zone_data.split('\n').slice(1);
+                zone_table.forEach(row=>{
+                    const cols=row.split(',');
+                    const year=cols[0];
+                    xs.push(year);
+                    const diff=cols[1];
+                    ys.push(diff);
+                });
+                const northhemi_fetch=await fetch('datasets/NH.Ts+dSST.csv');
+                const northhemi_data=await northhemi_fetch.text();
+                const northhemi_table=northhemi_data.split('\n').slice(2);
+                northhemi_table.forEach(nhd_row=>{
+                    const nhd_cols=nhd_row.split(',');
+                    const nhdy=nhd_cols[0];
+                    const nhdd=nhd_cols[1];
+                    nhd.push(nhdd);
+                });
+                const southhemi_fetch=await fetch('datasets/SH.Ts+dSST.csv');
+                const southhemi_data=await southhemi_fetch.text();
+                const southhemi_table=southhemi_data.split('\n').slice(2);
+                southhemi_table.forEach(shd_row=>{
+                    const shd_cols=shd_row.split(',');
+                    const shdy=shd_cols[0];
+                    const shdd=shd_cols[1];
+                    shd.push(shdd);
+                    console.log(shdy,shdd);
+                });
+                return {xs,ys,nhd,shd};
+            }
+        </script>
+    </body>
+</html>
